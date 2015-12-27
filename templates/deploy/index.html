@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <table class="table">
+   <caption>部署列表</caption>
+   <thead>
+      <tr>
+         <th>用户</th>
+         <th>时间</th>
+         <th>项目</th>
+      </tr>
+   </thead>
+   <tbody>
+    {% for i in list %}
+      <tr>
+         <td>xwl</td>
+         <td>2015-12-31</td>
+         <td>Platform</td>
+         <td>{{ i }}</td>
+      </tr>
+    {% endfor %}
+   </tbody>
+</table>
+{% endblock %}
