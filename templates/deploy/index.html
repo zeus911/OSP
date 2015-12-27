@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block body %}
+<script>
+function confirmDeploy(status, id) {
+    {
+    document.getElementById("stat").value = status;
+    document.getElementById("id").value = id;
+    document.getElementById("toDeploy").submit();
+    }
+}
+</script>
+
+<form action="{% url 'deploy_work' %}" method="post" id="toDeploy">
+    <input type="hidden" name="id" id="id" />
+    <input type="hidden" name="stat" id="stat" />
+</form>
+
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+   aria-labelledby="myModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"
+               aria-hidden="true">×
+            </button>
+            <h4 class="modal-title" id="myModalLabel">
+               部署任务
+            </h4>
+         </div>
+       <form action="/deploy/api/" method="post">
+         <div class="modal-body">
+                    <h4 width="10%" class="tableleft">描述</h4>
+                        <input type="text" id="target" class="form-control" readonly />
+                    <h4 width="10%" class="tableleft">项目</h4>
+                        <input type="text" id="project" class="project form-control" readonly>
+                    <input type="hidden" id='did' name="did" />
+
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default"
+               data-dismiss="modal">关闭
+            </button>
+            <input  type="submit" class="btn btn-primary" value="确定">
+         </div>
+       </form>
+      </div><!-- /.modal-content -->
+   </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<table class="table">
+   <caption>部署列表</caption>
+   <thead>
+      <tr>
+         <th>用户</th>
+         <th>时间</th>
+         <th>项目</th>
+         <th>状态</th>
+         <th>操作</th>
+         <th>描述</th>
+      </tr>
+   </thead>
+   <tbody>
+    {% for i in list %}
+      <tr style="height:50px;line-height:50px">
+         <td>{{ i.user_name }}</td>
+         <td>{{ i.date | date:"Y/m/d H:i:s" }}</td>
+         <td>{{ i.update_project }}</td>
+          {% if i.status == 0 %}
+              <td>已上传</td>
+              <td>
+              <button type="button" class="btn btn-default btn-sm" onclick='confirmDeploy("test","{{ i.id }}")'>
+                <span class="glyphicon glyphicon-play"></span> 部署
+              </button>
+
+              <button type="button" class="btn btn-default btn-sm">
+                <span class="glyphicon glyphicon-remove"></span> 删除
+              </button>
+              </td>
+          {% elif i.status == 1 %}
+              <td style="color:orange">待内测</td>
+              <td>
+              <button type="button" class="btn btn-default btn-sm deploy" data-toggle="modal" data-target="#myModal" data-id="{{ i.id }}">
+                <span class="glyphicon glyphicon-play"></span> 部署
+              </button>
+              <button type="button" class="btn btn-default btn-sm">
+                <span class="glyphicon glyphicon-remove"></span> 删除
+              </button>
+              </td>
+          {% elif i.status == 2 %}
+              <td style="color:blue">待公测</td>
+              <td></td>
+          {% elif i.status == 3 %}
+              <td style="color:green">已完成</td>
+              <td></td>
+          {% elif i.status == 5 %}
+              <td style="color:red">部署中</td>
+              <td></td>
+          {% endif %}
+         <td>{% if i.desc %}{{ i.desc }}{% endif %}</td>
+      </tr>
+    {% endfor %}
+   </tbody>
+</table>
+
+
+<div class="pagnation" id="pagnation">
+    {% if list.has_previous %}
+        <a href="?page={{ list.previous_page_number }}" title="Pre" class="page-prev">上一页</a>
+    {% endif %}
+    <a href="?page{{ page }}" class="current">{{ page }}</a>
+    {% if list.has_next %}
+        <a href="?page={{ list.next_page_number }}" title="Nex" class="page-next">下一页</a>
+    {% endif %}
+</div>
+
+<script type="text/javascript">
+var pagnation=$("#pagnation");
+$(document).on("keydown",function(event){
+	switch(event.keyCode){
+		 case 37 : window.location.href = pagnation.find(".page-prev").attr("href");break;
+		 case 39 : window.location.href = pagnation.find(".page-next").attr("href");break
+	}
+});
+$('.deploy').click(function(){
+    var did = $(this).attr('data-id');
+    var data = AJAX('/cmdb/host/', 'POST', {did:did})
+    if ( data.status == 0 ){
+        document.getElementById('target').placeholder = '测试机';
+    }
+    else if ( data.status == 1 ){
+        document.getElementById('target').placeholder = '公测机';
+    }
+    else {
+        document.getElementById('target').placeholder = '线上机器';
+    }
+    document.getElementById('project').placeholder = data.project;
+    document.getElementById('did').value = did;
+})
+</script>
+{% endblock %}
